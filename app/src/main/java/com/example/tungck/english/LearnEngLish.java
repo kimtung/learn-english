@@ -51,6 +51,9 @@ public class LearnEngLish extends AppCompatActivity {
     }
     private void nextClick(){
         if(editText.getText().toString().trim().equals(word)){
+            getData();
+
+        }else {
             fu.showAlertDialog("Lỗi","Câu trả lời của bạn là sai",this);
         }
     }
