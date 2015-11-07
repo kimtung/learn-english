@@ -1,12 +1,18 @@
 package com.example.tungck.english.models;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Created by TungCK on 10/31/2015.
  */
 public class GoogleImageSearchRespone {
-
-    private ResponseData responseData;
-    private int responseStatus;
+    @SerializedName("responseData")
+    @Expose
+    public ResponseData responseData;
+    @SerializedName("responseStatus")
+    @Expose
+    public int responseStatus;
 
     public ResponseData getResponseData() {
         return responseData;

@@ -11,9 +11,9 @@ import android.net.NetworkInfo;
  * Created by TungCK on 10/31/2015.
  */
 public class FunctionUtils {
-    private ProgressDialog progressDialog;
+    private static ProgressDialog progressDialog;
 
-    public void showProgressDialog(Context context) {
+    public static void showProgressDialog(Context context) {
         String message = "Loading...";
         progressDialog = new ProgressDialog(context);
         progressDialog.setMessage(message);
@@ -33,7 +33,7 @@ public class FunctionUtils {
         return isConnected;
     }
 
-    public void hideProgressDialog() {
+    public static void hideProgressDialog() {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }

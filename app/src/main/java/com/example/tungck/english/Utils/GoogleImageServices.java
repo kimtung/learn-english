@@ -16,6 +16,6 @@ public interface GoogleImageServices {
     /**
      * @return a
      */
-    @GET("/")
-    Call<GoogleImageSearchRespone> GetImage(@Query(value = "q",encoded=true) String key, @Query("v") int version);
+    @GET("ajax/services/search/images")
+    Call<GoogleImageSearchRespone> GetImage(@Query("q") String key, @Query("v") String version);
 }

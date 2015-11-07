@@ -1,24 +1,74 @@
 package com.example.tungck.english.models;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Created by TungCK on 10/31/2015.
  */
 public class Result {
-    private String GsearchResultClass;
-    private int width;
-    private int height;
-    private String imageId;
-    private String tbWidth;
-    private String tbHeight;
-    private String unescapedUrl;
-    private String url;
-    private String visibleUrl;
-    private String title;
-    private String titleNoFormatting;
-    private String originalContextUrl;
-    private String content;
-    private String contentNoFormatting;
-    private String tbUrl;
+
+        @SerializedName("GsearchResultClass")
+        @Expose
+        private String GsearchResultClass;
+        @SerializedName("width")
+        @Expose
+        private String width;
+        @SerializedName("height")
+        @Expose
+        private String height;
+        @SerializedName("imageId")
+        @Expose
+        private String imageId;
+        @SerializedName("tbWidth")
+        @Expose
+        private String tbWidth;
+        @SerializedName("tbHeight")
+        @Expose
+        private String tbHeight;
+        @SerializedName("unescapedUrl")
+        @Expose
+        private String unescapedUrl;
+        @SerializedName("url")
+        @Expose
+        private String url;
+        @SerializedName("visibleUrl")
+        @Expose
+        private String visibleUrl;
+        @SerializedName("title")
+        @Expose
+        private String title;
+        @SerializedName("titleNoFormatting")
+        @Expose
+        private String titleNoFormatting;
+        @SerializedName("originalContextUrl")
+        @Expose
+        private String originalContextUrl;
+        @SerializedName("content")
+        @Expose
+        private String content;
+        @SerializedName("contentNoFormatting")
+        @Expose
+        private String contentNoFormatting;
+        @SerializedName("tbUrl")
+        @Expose
+        private String tbUrl;
+//    public String GsearchResultClass;
+//    public int width;
+//    public int height;
+//    public String imageId;
+//    public String tbWidth;
+//    public String tbHeight;
+//    public String unescapedUrl;
+//    public String url;
+//    public String visibleUrl;
+//    public String title;
+//    public String titleNoFormatting;
+//    public String originalContextUrl;
+//    public String content;
+//    public String contentNoFormatting;
+//    public String tbUrl;
+
 
     public String getGsearchResultClass() {
         return GsearchResultClass;
@@ -28,19 +78,19 @@ public class Result {
         GsearchResultClass = gsearchResultClass;
     }
 
-    public int getWidth() {
+    public String getWidth() {
         return width;
     }
 
-    public void setWidth(int width) {
+    public void setWidth(String width) {
         this.width = width;
     }
 
-    public int getHeight() {
+    public String getHeight() {
         return height;
     }
 
-    public void setHeight(int height) {
+    public void setHeight(String height) {
         this.height = height;
     }
 

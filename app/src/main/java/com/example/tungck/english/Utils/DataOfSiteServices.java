@@ -11,7 +11,7 @@ import retrofit.http.Query;
  * Created by TungCK on 10/31/2015.
  */
 public interface DataOfSiteServices {
-    @GET("/")
+    @GET("api/web/site/randomword")
     Call<Words> GetWord();
 
 }

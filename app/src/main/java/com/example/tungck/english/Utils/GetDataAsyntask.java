@@ -10,6 +10,8 @@ import com.example.tungck.english.models.GoogleImageSearchRespone;
 import com.example.tungck.english.models.Result;
 import com.example.tungck.english.models.WordObject;
 import com.example.tungck.english.models.Words;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.apache.http.params.HttpParams;
 
@@ -31,15 +33,18 @@ import retrofit.RxJavaCallAdapterFactory;
 /**
  * Created by TungCK on 10/31/2015.
  */
-public class GetDataAsyntask extends AsyncTask<Void, Void, WordObject> {
-
-    private String url;
+public class GetDataAsyntask extends AsyncTask<Void, Void, Void> {
     private FunctionUtils utils;
     private Context context;
+
+    private String imageUrl = null;
+    private String wordText = null;
+
+    private int errorCode = 0;
+    private String errorMessage = null;
+
     private DataDownloadListener dataDownloadListener;
-    WordObject wordObject;
-    public GetDataAsyntask(String url, Context context) {
-        this.url = url;
+    public GetDataAsyntask(Context context) {
         this.context = context;
         utils = new FunctionUtils();
     }
@@ -47,24 +52,12 @@ public class GetDataAsyntask extends AsyncTask<Void, Void, WordObject> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        utils.showProgressDialog(context);
+        FunctionUtils.showProgressDialog(context);
     }
 
     @Override
-    protected void onPostExecute(WordObject arg0) {
+    protected void onPostExecute(Void arg0) {
         super.onPostExecute(arg0);
-
-        if(arg0 != null)
-        {
-            System.out.println("error1: "+arg0.getText());
-            dataDownloadListener.dataDownloadedSuccessfully(arg0);
-        }
-        else{
-            System.out.println("error2: ");
-            dataDownloadListener.dataDownloadFailed();
-        }
-
-        utils.hideProgressDialog();
 
     }
 
@@ -74,21 +67,16 @@ public class GetDataAsyntask extends AsyncTask<Void, Void, WordObject> {
     }
 
     @Override
-    protected WordObject doInBackground(Void... voids) {
-        wordObject = null;
-
-            System.out.println("error11111: ");
+    protected Void doInBackground(Void... voids) {
+        Gson gson = new GsonBuilder()
+                .create();
             Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(url)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .baseUrl(Constants.BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create(gson))
                     .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                     .build();
             DataOfSiteServices service = retrofit.create(DataOfSiteServices.class);
-            int i = 1;
-            System.out.println("error2222: ");
             Call<Words> wordsCall = service.GetWord();
-            System.out.println("error3333: ");
             wordsCall.enqueue(new Callback<Words>() {
                 @Override
                 public void onResponse(Response<Words> response, Retrofit retrofit) {
@@ -101,11 +89,10 @@ public class GetDataAsyntask extends AsyncTask<Void, Void, WordObject> {
                                 .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                                 .build();
                         GoogleImageServices service2 = retrofit2.create(GoogleImageServices.class);
-                        Call<GoogleImageSearchRespone> googleImageSearchRespone1 = service2.GetImage(word.getWord(), 1);
+                        Call<GoogleImageSearchRespone> googleImageSearchRespone1 = service2.GetImage(word.getWord(), "1.0");
                         googleImageSearchRespone1.enqueue(new Callback<GoogleImageSearchRespone>() {
                             @Override
                             public void onResponse(Response<GoogleImageSearchRespone> response, Retrofit retrofit) {
-                                System.out.println(retrofit.baseUrl());
                                 GoogleImageSearchRespone googleImageSearchRespone = response.body();
                                 if(googleImageSearchRespone != null && googleImageSearchRespone.getResponseData() != null && googleImageSearchRespone.getResponseData().getResults() != null){
                                     int count = googleImageSearchRespone.getResponseData().getResults().size();
@@ -116,59 +103,47 @@ public class GetDataAsyntask extends AsyncTask<Void, Void, WordObject> {
                                         Random rd = new Random();
                                         int index = rd.nextInt(count);
                                         Result result = googleImageSearchRespone.getResponseData().getResults().get(index);
-
-                                        String imageUrl = result.getUrl();
-                                        System.out.println("URL: " + imageUrl);
-                                        try {
-                                            Bitmap bitmap = BitmapFactory.decodeStream((InputStream) new URL(imageUrl).getContent());
-                                            if(bitmap != null){
-                                                wordObject = new WordObject(word.getWord(),bitmap);
-                                            }else {
-                                                wordObject = new WordObject(Constants.ERROR_CODE_GOOGLE_DATA, "Lỗi trong quá trình load ảnh: " + imageUrl);
-                                            }
-
-                                        }catch (MalformedURLException e){
-                                            System.out.println("error1: " + e.getMessage());
-                                            wordObject = new WordObject(Constants.ERROR_CODE_GOOGLE_DATA, "URL ảnh không đúng định dạng: " + imageUrl);
-                                        }
-                                        catch (IOException e){
-                                            System.out.println("error2: " + e.getMessage());
-                                            wordObject = new WordObject(Constants.ERROR_CODE_GOOGLE_DATA, "URL ảnh không đúng định dạng: " + imageUrl);
-                                        }
-
+                                        imageUrl = result.getUrl();
+                                        System.out.println("error URL: "+imageUrl);
+                                        wordText = word.getWord();
+                                        dataDownloadListener.dataDownloadedSuccessfully(wordText,imageUrl);
+                                    }else{
+                                        errorCode = Constants.ERROR_CODE_GOOGLE_DATA;
+                                        errorMessage = "Không tìm thấy ảnh nào tương ướng với ký tự: " + word.getWord();
+                                        dataDownloadListener.dataDownloadFailed(errorCode, errorMessage);
                                     }
                                 }else {
-                                    wordObject = new WordObject(Constants.ERROR_CODE_GOOGLE_DATA, "Không tìm thấy ảnh nào tương ướng với ký tự: " + word.getWord());
+                                    errorCode = Constants.ERROR_CODE_GOOGLE_DATA;
+                                    errorMessage = "Xảy ra vấn đề với google api response";
+                                    dataDownloadListener.dataDownloadFailed(errorCode, errorMessage);
                                 }
+//                                utils.hideProgressDialog();
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                System.out.println("error Failure ww: " + t.getMessage());
+                                errorCode = Constants.ERROR_CODE_GOOGLE_DATA;
+                                errorMessage = "Dữ liệu google trả về sai định dạng";
+//                                utils.hideProgressDialog();
                             }
 
                         });
 
-
-
                     }else {
-                        wordObject = new WordObject(Constants.ERROR_CODE_MY_DATA, "Dữ liệu không được trả về");
+                        errorCode = Constants.ERROR_CODE_MY_DATA;
+                        errorMessage = "Dữ liệu không được trả về";
+//                        utils.hideProgressDialog();
                     }
                 }
 
                 @Override
                 public void onFailure(Throwable t) {
-                    System.out.println("error Failure: " + t.getMessage());
-
-
+                    errorCode = Constants.ERROR_CODE_MY_DATA;
+                    errorMessage = "Dữ liệu trả về sai định dạng";
+//                    utils.hideProgressDialog();
                 }
             });
-
-
-
-
-
-        return wordObject;
+        return null;
     }
 
     public void setDataDownloadListener(DataDownloadListener dataDownloadListener) {
@@ -176,8 +151,4 @@ public class GetDataAsyntask extends AsyncTask<Void, Void, WordObject> {
     }
 
 
-    private WordObject getData(){
-
-        return wordObject;
-    }
 }
