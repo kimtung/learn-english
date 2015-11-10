@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,14 +13,25 @@ import android.widget.ImageView;
 
 import com.example.tungck.english.Utils.Constants;
 import com.example.tungck.english.Utils.DataDownloadListener;
+import com.example.tungck.english.Utils.DataOfSiteServices;
 import com.example.tungck.english.Utils.FunctionUtils;
 import com.example.tungck.english.Utils.GetDataAsyntask;
 import com.example.tungck.english.Utils.ImageDownloadListener;
 import com.example.tungck.english.models.WordObject;
+import com.example.tungck.english.models.Words;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+
+import retrofit.Call;
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
+import retrofit.RxJavaCallAdapterFactory;
 
 public class LearnEngLish extends AppCompatActivity {
 
@@ -28,7 +40,10 @@ public class LearnEngLish extends AppCompatActivity {
     private EditText editText;
     private Button btCancel;
     private Button btNext;
-    private String word;
+    private Button btGetAnswer;
+    private String word = "";
+    private int countNextClick = 0;
+    public boolean isAddScore = true;
     FunctionUtils fu = new FunctionUtils();
 
     @Override
@@ -40,7 +55,15 @@ public class LearnEngLish extends AppCompatActivity {
         editText = (EditText)findViewById(R.id.text1);
         btCancel = (Button)findViewById(R.id.cancel_action);
         btNext = (Button)findViewById(R.id.next_action);
+        btGetAnswer = (Button)findViewById(R.id.get_answer_action);
         getData();
+        btGetAnswer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fu.showAlertDialog("Kết quả","Từ tương ứng với bức ảnh là: " + word,LearnEngLish.this);
+                isAddScore = false;
+            }
+        });
         btNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,8 +80,43 @@ public class LearnEngLish extends AppCompatActivity {
 
     }
     private void nextClick(){
+        countNextClick += 1;
+
         if(editText.getText().toString().trim().toUpperCase().equals(word.toUpperCase())){
-            getData();
+            int score = 0;
+            if(countNextClick == 1){
+                score = 3;
+            }else
+            if(countNextClick < 3 && countNextClick > 2){
+                score = 1;
+            }
+            if(score > 0 && isAddScore){
+                FunctionUtils.showProgressDialog(LearnEngLish.this);
+                Gson gson = new GsonBuilder()
+                        .create();
+                Retrofit retrofit = new Retrofit.Builder()
+                        .baseUrl(Constants.BASE_URL)
+                        .addConverterFactory(GsonConverterFactory.create(gson))
+                        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                        .build();
+                DataOfSiteServices service = retrofit.create(DataOfSiteServices.class);
+                Call<Words> wordsCall = service.AddScore(word, score);
+                wordsCall.enqueue(new Callback<Words>() {
+                    @Override
+                    public void onResponse(Response<Words> response, Retrofit retrofit) {
+                        Log.d("LEARNING_ENGLISH","Từ trả về: " + response.isSuccess());
+                        FunctionUtils.hideProgressDialog();
+                        getData();
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        fu.showAlertDialog("Xảy ra lỗi!", "Có lỗi xảy ra trong quá trình thêm điểm", LearnEngLish.this);
+                    }
+                });
+            }else {
+                getData();
+            }
 
         }else {
             fu.showAlertDialog("Rất tiếc!", "Câu trả lời của bạn là sai: ", this);
@@ -81,6 +139,9 @@ public class LearnEngLish extends AppCompatActivity {
                         System.out.println("URL: " + data.getText());
                         imageView.setImageBitmap(data.getBm());
                         word = temp;
+                        editText.setText("");
+                        isAddScore = true;
+                        countNextClick = 0;
                     }
 
                     @Override
